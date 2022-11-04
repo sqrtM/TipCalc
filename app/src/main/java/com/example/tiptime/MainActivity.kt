@@ -40,8 +40,9 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-private fun calculateTip(amount: Double, tipPercent: Double = 15.0): String {
-    val tip = tipPercent / 100 * amount
+private fun calculateTip(amount: Double, tipPercent: Double = 15.0, roundUp: Boolean): String {
+    var tip = tipPercent / 100 * amount
+    if (roundUp) tip = kotlin.math.ceil(tip)
     return NumberFormat.getCurrencyInstance().format(tip)
 }
 
@@ -65,9 +66,7 @@ fun RoundTheTipRow(roundUp: Boolean, onRoundUpChanged: (Boolean) -> Unit, modifi
         .fillMaxWidth()
         .size(48.dp), verticalAlignment = Alignment.CenterVertically) {
         Text(text = stringResource(id = R.string.round_up_tip))
-        Switch(modifier = modifier
-            .fillMaxWidth()
-            .wrapContentWidth(), checked = roundUp, onCheckedChange = onRoundUpChanged)
+        Switch(modifier = modifier.fillMaxWidth().wrapContentWidth(), checked = roundUp, onCheckedChange = onRoundUpChanged)
     }
 }
 
@@ -76,9 +75,10 @@ fun TipTimeScreen() {
     var amountInput by remember { mutableStateOf("") }
     var tipInput by remember { mutableStateOf("") }
     val amount = amountInput.toDoubleOrNull() ?: 0.0
-    val tipPercent = tipInput.toDoubleOrNull() ?: 0.0
-    val tip = calculateTip(amount, tipPercent)
     var roundUp by remember { mutableStateOf(false) }
+    val tipPercent = tipInput.toDoubleOrNull() ?: 0.0
+    val tip = calculateTip(amount, tipPercent, roundUp)
+
     Column(
         modifier = Modifier.padding(32.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -92,7 +92,6 @@ fun TipTimeScreen() {
         EditNumberField(label = R.string.bill_amount, value = amountInput, onValueChange = { amountInput = it }, ime = ImeAction.Next)
         Spacer(Modifier.height(24.dp))
         EditNumberField(label = R.string.how_was_the_service, value = tipInput, onValueChange = { tipInput = it }, ime = ImeAction.Done)
-        Spacer(Modifier.height(24.dp))
         RoundTheTipRow(roundUp = roundUp, onRoundUpChanged = { roundUp = it })
         Text(
             text = stringResource(id = R.string.tip_amount, tip),
